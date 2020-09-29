@@ -24,7 +24,7 @@ Detailed explanation and job configuration can be found at [DeployerOpenMR READM
 
 ## Deployer
 
-Handles the manualy executed jobs to validate/deploy metadata into Salesforce using as input parameters the source and target commits hash / tags names and the target org/sandbox.
+Handles the manualy executed jobs to validate/deploy metadata into Salesforce using as input parameters the source and target commit hashes / tags names and the target org/sandbox.
 
 Detailed explanation and job configuration can be found at [Deployer README](Deployer_README.md)
 
