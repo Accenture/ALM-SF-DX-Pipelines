@@ -2,7 +2,7 @@
 
 Groovy pipelines for Jenkins to perform ALM (Application Lifecycle Management) operations over Salesforce platform using metadata DX. The Metadata API version of these pipelines can be found in [ALM-SF-Metadata-API-Pipelines ](https://github.com/Accenture/ALM-SF-Metadata-API-Pipelines).
 
-These pipelines are meant to be used altogether the Pyhon scripts from [ALM-SF-DX-Python-Tools](https://github.com/Accenture/ALM-SF-DX-Python-Tools).
+These pipelines are meant to be used altogether with the Python scripts from [ALM-SF-DX-Python-Tools](https://github.com/Accenture/ALM-SF-DX-Python-Tools).
 
 Currently supporting:
 - Gitlab CE
