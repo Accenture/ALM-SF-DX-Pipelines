@@ -29,6 +29,14 @@ Handles the manually executed jobs to validate/deploy metadata into Salesforce u
 
 Detailed explanation and job configuration can be found at [Deployer README](/docs/Deployer_README.md).
 
+## Pipeline Libraries
+
+Set of shared libraries wich are used by the pipelines execution.
+
+Detailed explanation of each library can be found at [Libraries README](/var/README.md).
+
+Detailed explanation and job configuration can be found at [Deployer README](/docs/Deployer_README.md).
+
 
 # Contributors Guide
 
