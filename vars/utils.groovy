@@ -65,11 +65,13 @@ def handleDeltaStatus(statusCode) {
         case "0":
             echo 'INFO: Delta package build correclty';
             env.delta_built = true;
+            createDeltaArtifacts();
             commentHandler.editLastMessage( "+ Delta Package Built Successfully" );
             break
         case "11":
             echo 'WARNING: Delta package build with warnings';
             env.delta_built = true;
+            createDeltaArtifacts();
             commentHandler.editLastMessage( "+ Delta Package Built With Warnings (Unknown Folders), please notify the RM" );
             break
         case "123":
@@ -98,6 +100,19 @@ def handleDeltaStatus(statusCode) {
             commentHandler.updateStatus( env.COMMIT_STATUS_FAILED );
             commentHandler.editLastMessage( "**ERROR! Unhandled Error, ABORTING**" );
             error 'FATAL: Unhandled Errors...';
+    }
+}
+
+def createDeltaArtifacts(){
+    def date    = sh (script: 'date "+%y%m%d_%H%M"', returnStdout: true).trim();
+    def source  = sh(script: "echo ${env.gitSourceBranch} | tr '/' '-'", returnStdout: true).trim();
+    def target  = sh(script: "echo ${env.gitTargetBranch} | tr '/' '-'", returnStdout: true).trim();
+    def path    = "${source}-${target}";
+    def file    = "${date}__${path}";
+
+    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}/artifacts_folder" ){
+        sh "zip -r ${file}.zip ../srcToDeploy";
+        archiveArtifacts allowEmptyArchive: true, artifacts: "${file}.zip", fingerprint: true;
     }
 }
 
