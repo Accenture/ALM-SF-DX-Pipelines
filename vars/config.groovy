@@ -3,9 +3,6 @@ import java.util.regex.Pattern;
 
 def call(){
     installRequirements();
-
-    def propertiesFile = "pipelines/resources/config.properties";
-    env.API_VERSION    = getProperty( propertiesFile, "apiPackage" );
     
     commentHandler.postMessage( "### Starting Build [${env.BUILD_DISPLAY_NAME}](${env.RUN_DISPLAY_URL})" );
     
