@@ -13,9 +13,8 @@ def call(){
     if( fileExists( "$reportPath" ) ){
         archiveArtifacts allowEmptyArchive: true, artifacts: "${reportPath}", fingerprint: true;  
         pmdMsg += " [PMD Report]( ${env.BUILD_URL}artifact/${reportPath} )";
+        sh "mv ${reportPath} ${env.PATH_SALESFORCE}/artifacts_folder/"
     }
-
-    sh "mv ${reportPath} ${env.PATH_SALESFORCE}/artifacts_folder/"
 
     commentHandler.editLastMessage( pmdMsg );
 }
