@@ -2,7 +2,7 @@ def call(){
 
     commentHandler.editLastMessage( "+ Running PMD Analysis" );
     
-    def ruleSetPath         = "${env.PATH_SCRIPTS}/pmd/resources/pmd-ruleset-acn.xml";
+    def ruleSetPath         = "${env.PATH_SCRIPTS}/pmd/rules.xml";
     def reportPath          = "sfdxScannerReport.html";
     def deployFolderPath    = "${env.PATH_SALESFORCE}/srcToDeploy";
 
