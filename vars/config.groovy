@@ -37,7 +37,7 @@ def getProperty(file,key){
 def generateDescribe(){
     def statusCode;
     withCredentials( [usernamePassword(credentialsId: env.SFDX_CREDENTIALS, usernameVariable: 'SFDC_USN', passwordVariable: 'SFDC_CONSUMER_KEY') ] ){
-        statusCode = sh(script: "sfdx force:mdapi:describemetadata -u ${SFDC_USN} -f ${env.PATH_SALESFORCE}/${env.PROJECT_NAME}/describe.log --apiversion ${env.API_VERSION}", returnStatus: true);
+        statusCode = sh(script: "sfdx force:mdapi:describemetadata -u ${SFDC_USN} -f ${env.PATH_SALESFORCE}/describe.log --apiversion ${env.API_VERSION}", returnStatus: true);
         if(statusCode != 0){
             error 'FATAL: Cannot create describe log. ABORTING';
         }

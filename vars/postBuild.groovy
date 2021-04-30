@@ -1,7 +1,7 @@
 def call(){
     if( currentBuild.currentResult == Result.SUCCESS.toString() ){
     	commentHandler.updateStatus( env.COMMIT_STATUS_SUCCESS );
-        dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){
+        dir( "${env.PATH_SALESFORCE}" ){
             sendEmail.sendEmailValidate( "success", env.gitUserEmail, env.RECIPIENTS_RELEASE_MANAGERS, "pmdReport.html" );
         }
     }

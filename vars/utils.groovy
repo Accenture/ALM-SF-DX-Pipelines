@@ -50,7 +50,7 @@ def handleValidationErrors( postType, postStatusCode, statusMessage ){
         message = "+ **${postType} Failed with error code: ${postStatusCode}.** [${postType} Log]( ${env.BUILD_URL}artifact/validate.json )";
         errorMessage = "ERROR: ${postType} Failed. Error code: ${postStatusCode}.";
         commentHandler.editLastMessage( message );
-        dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){
+        dir( "${env.PATH_SALESFORCE}" ){
             def logFile = ( postType == "Validation" ) ? "validate.json" : "deploy.json";
             sendEmail.sendEmailValidate( "error", env.gitUserEmail, "${env.RECIPIENTS_RELEASE_MANAGERS}", logFile );
         }
@@ -110,7 +110,7 @@ def createDeltaArtifacts(){
     def path    = "${source}-${target}";
     def file    = "${date}__${path}";
 
-    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}/artifacts_folder" ){
+    dir( "${env.PATH_SALESFORCE}/artifacts_folder" ){
         sh "zip -r ${file}.zip ../srcToDeploy";
         archiveArtifacts allowEmptyArchive: true, artifacts: "${file}.zip", fingerprint: true;
     }
