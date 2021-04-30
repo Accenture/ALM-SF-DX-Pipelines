@@ -3,7 +3,7 @@ def call(){
     commentHandler.editLastMessage( "+ Running Salesforce Deployment" );
 
     def statusCode;    
-    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){
+    dir( "${env.PATH_SALESFORCE}" ){
         testMR = utils.getPRTests();
         if( testMR != null && testMR.length() > 0 ){
             statusCode = sfdxQuickDeploy();

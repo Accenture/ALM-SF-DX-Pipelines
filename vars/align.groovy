@@ -3,7 +3,7 @@ def call( operation ){
     def statusCode;
     def statusMessage;
 
-    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){
+    dir( "${env.PATH_SALESFORCE}" ){
         if( operation == 'validate' ){
             statusCode    = validatePackage( 'srcToDeploy' );
             statusMessage = handleResults( 'validate.json' )

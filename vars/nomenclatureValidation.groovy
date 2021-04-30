@@ -2,8 +2,8 @@ def call(){
     echo "INFO: TargetBranch: ${env.gitTargetBranch}"
     
     def statusCode = "";
-    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){          
-        statusCode = sh( script: "python3.7 ../../${env.PATH_SCRIPTS}/nomenclature/nomenclature.py execute", returnStatus: true );
+    dir( "${env.PATH_SALESFORCE}" ){          
+        statusCode = sh( script: "python3.7 ../${env.PATH_SCRIPTS}/nomenclature/nomenclature.py execute", returnStatus: true );
         echo "INFO: statusCode: ${statusCode}";
         def date   = sh( script: 'date "+%y%m%d_%H%M"', returnStdout: true ).trim();
         def source = sh( script: "echo ${env.gitSourceBranch} | tr '/' '-'", returnStdout: true ).trim();

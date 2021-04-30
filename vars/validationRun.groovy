@@ -6,7 +6,7 @@ def call(){
 
     def statusCode;
     def statusMessage;
-    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){
+    dir( "${env.PATH_SALESFORCE}" ){
         statusCode = validatePackage( 'srcToDeploy', testToRun );
         archiveArtifacts allowEmptyArchive: true, artifacts: "validate.json", fingerprint: true;
         def sfdxResponse = readJSON file: 'validate.json';
@@ -38,9 +38,9 @@ def checkTestToRun( testToRun ){
 
     def hasApexClasses;
     def hasApexTriggers;
-    dir( "${env.PATH_SALESFORCE}/${env.PROJECT_NAME}" ){
-        hasApexClasses    = sh( script: "if [ -d 'srcToDeploy/classes' ]; then echo 'true'; else echo 'false'; fi", returnStdout: true );
-        hasApexTriggers   = sh( script: "if [ -d 'srcToDeploy/triggers' ]; then echo 'true'; else echo 'false'; fi", returnStdout: true );
+    dir( "${env.PATH_SALESFORCE}/srcToDeploy" ){
+        hasApexClasses    = sh( script: "if [ -d 'classes' ]; then echo 'true'; else echo 'false'; fi", returnStdout: true );
+        hasApexTriggers   = sh( script: "if [ -d 'triggers' ]; then echo 'true'; else echo 'false'; fi", returnStdout: true );
     }
 
     if( ( hasApexClasses.trim() == 'true' || hasApexTriggers.trim() == 'true' ) && testToRun.trim() == '' ){
