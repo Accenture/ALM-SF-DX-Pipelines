@@ -28,30 +28,31 @@ def getPRTests(){
 def handleValidationErrors( postType, postStatusCode, statusMessage ){
     echo "INFO: ${postType} returned status code: ${postStatusCode}";
     def message = '';
+    def logFile = ( postType == "Validation" ) ? "validate.json" : "deploy.json";
     if( postStatusCode == "0"){
         if( statusMessage == "Succeeded" ){
             message = ( postType == "Validation" ) ? "+ Validation Succeded." : "+ Package Deployed.";
-            message += " [${postType} Log]( ${env.BUILD_URL}artifact/validate.json )";
+            message += " [${postType} Log]( ${env.BUILD_URL}artifact/${logFile} )";
         	commentHandler.editLastMessage( message );
         }
         else if ( statusMessage == "InProgress" ){ 
-            message = "+ **${postType} The current build status is taking too long. Check the deployment status in your target org.** [${postType} Log]( ${env.BUILD_URL}artifact/validate.json )";
+            message = "+ **${postType} The current build status is taking too long. Check the deployment status in your target org.** [${postType} Log]( ${env.BUILD_URL}artifact/${logFile} )";
             errorMessage = "ERROR: ${postType} Failed. Error code: Timeout.";
 		    commentHandler.editLastMessage( message );
 		    error "$errorMessage";
         }
         else{ 
-            message = "+ **${postType} Failed with the following build status: ${statusMessage}.** [${postType} Log]( ${env.BUILD_URL}artifact/validate.json )";
+            message = "+ **${postType} Failed with the following build status: ${statusMessage}.** [${postType} Log]( ${env.BUILD_URL}artifact/${logFile} )";
             errorMessage = "ERROR: ${postType} Failed. Build status: ${statusMessage}.";
             commentHandler.editLastMessage( message );
         	error "$errorMessage";
     	}
-    }else{
-        message = "+ **${postType} Failed with error code: ${postStatusCode}.** [${postType} Log]( ${env.BUILD_URL}artifact/validate.json )";
+    }
+    else{
+        message = "+ **${postType} Failed with error code: ${postStatusCode}.** [${postType} Log]( ${env.BUILD_URL}artifact/${logFile} )";
         errorMessage = "ERROR: ${postType} Failed. Error code: ${postStatusCode}.";
         commentHandler.editLastMessage( message );
         dir( "${env.PATH_SALESFORCE}" ){
-            def logFile = ( postType == "Validation" ) ? "validate.json" : "deploy.json";
             sendEmail.sendEmailValidate( "error", env.gitUserEmail, "${env.RECIPIENTS_RELEASE_MANAGERS}", logFile );
         }
         error "$errorMessage";
