@@ -12,7 +12,20 @@ def call(){
         }
         archiveArtifacts allowEmptyArchive: true, artifacts: "deploy.json", fingerprint: true;
         def sfdxResponse = readJSON file: 'deploy.json';
-        statusMessage = sfdxResponse.result.status;
+        
+        if( sfdxResponse.result && sfdxResponse.result.status ){
+            statusMessage = sfdxResponse.result.status;
+        }
+        else if( sfdxResponse.result && sfdxResponse.result.deployedSource && sfdxResponse.status.toString() == '0' ){
+            statusMessage = 'Succeeded';
+        }
+        else if( sfdxResponse.status.toString() != '0' ){
+            statusMessage = 'Error';
+        }
+
+        dir( "artifacts_folder" ){
+            sh "mv ../deploy.json .";
+        }
     }
 
     utils.handleValidationErrors( 'Deployment', statusCode.toString().trim(), statusMessage );
