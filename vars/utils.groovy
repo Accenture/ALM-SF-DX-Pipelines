@@ -7,10 +7,10 @@ def getPRTests(){
     if( env.TEST_TO_RUN != null && env.TEST_TO_RUN.length()>0 ){
         testMR = env.TEST_TO_RUN;
     }
-    else if( env.gitMergeRequestDescription != null ){
-        testMR = env.gitMergeRequestDescription.split('testsToBeRun')[1].split("```")[0];
-        testMR = testMR.replaceAll("\\s{1,}", " ");
-        if( testMR && testMR.contains('Elimina este mensaje') ){
+    else if( env.gitMergeRequestDescription != null && env.gitMergeRequestDescription.contains( 'testsToBeRun' ) ){
+        testMR = env.gitMergeRequestDescription.split( 'testsToBeRun' )[ 1 ].split( "```" )[ 0 ];
+        testMR = testMR.replaceAll( "\\s{1,}", " " );
+        if( testMR && testMR.contains( 'Elimina este mensaje' ) ){
             print "Default Description";
             testMR = '';
         }
