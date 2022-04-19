@@ -4,6 +4,8 @@ Groovy pipelines for Jenkins to perform ALM (Application Lifecycle Management) o
 
 These pipelines are meant to be used altogether with Python scripts from [ALM-SF-DX-Python-Tools](https://github.com/Accenture/ALM-SF-DX-Python-Tools).
 
+Azure pipelines can be found at branch [main-azure](https://github.com/Accenture/ALM-SF-DX-Pipelines/tree/main-azure).
+
 Currently supporting:
 - Gitlab CE
 - Gitlab EE
