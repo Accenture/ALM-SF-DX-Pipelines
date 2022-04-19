@@ -1,0 +1,16 @@
+parameters:
+  - name: 'messageContent'
+    default: ''
+    type: string
+  - name: 'ts'
+    default: 4
+    type: number
+
+steps:
+  - task: PythonScript@0
+    displayName: 'Create Thread'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: '$(Pipeline.Workspace)/$(PATH_SCRIPTS)/callGitServer/call_git_server.py'
+      arguments: 'comment -m "${{ parameters.messageContent }}" -mr $(gitPullRequestId) -t $(REST_AZURE_TOKEN) -o $(owner) -p $(GIT_PROJECT_NAME) -ri $(GIT_REPOSITORY_NAME) -r $(repoHost) -b "1" -w "1" -ts ${{ parameters.ts }}'
+      failOnStderr: true

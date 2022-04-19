@@ -1,0 +1,4 @@
+steps:
+  - checkout: Python_Scripts
+    displayName: 'Checkout Python Scripts'
+    path: $(PATH_SCRIPTS)

@@ -1,0 +1,56 @@
+steps:
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '+ Polling Deployment'
+      isParametrizedMsg: 'false'
+
+  - task: Bash@3
+    displayName: 'Poll Deployment'
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "$(deploymentId)"
+        sfdx force:source:deploy:report -w 99 -u $(SFDX_USERNAME) --apiversion ${API_VERSION} -i $(deploymentId) --verbose
+        sfdx force:source:deploy:report -w 1 -u $(SFDX_USERNAME) --apiversion ${API_VERSION} -i $(deploymentId) --json > deploy.json
+
+        mkdir -p artifacts_folder
+        mv deploy.json artifacts_folder/deploy.json
+
+        statusCode=0
+        deploymentStatusMessage=""
+        if [[ $statusCode -ne 0 || "true" != $(jq -r '.result.success' artifacts_folder/deploy.json) ]] ; then
+          statusCode=1
+          deploymentStatusMessage="+ **Deployment Failed**"
+        else
+          deploymentStatusMessage="+ Deployment Completed Successfully"
+        fi
+        echo "Status code: ${statusCode}"
+
+        # Export variables
+        echo "##vso[task.setvariable variable=deploymentStatusMessage]$deploymentStatusMessage"
+
+        exit ${statusCode}
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(deploymentStatusMessage)'
+
+  - template: ../utils/publishArtifact.yml@Templates_Salesforce
+    parameters:
+      artifactPath: '$(Pipeline.Workspace)/$(PATH_SALESFORCE)/artifacts_folder/deploy.json'
+      artifactName: 'deploy.json'
+      commentMessage: 'Download Deployment JSON'
+
+  - task: Bash@3
+    displayName: 'Cancel pipeline on deployment error'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "$(deploymentStatusMessage)"
+        echo "##vso[task.logissue type=error;]$(deploymentStatusMessage)"
+        echo "##vso[task.complete result=Failed;]"
+        exit 1
+      failOnStderr: true
+    condition: eq( variables['deploymentStatusMessage'], '+ **Deployment Failed**' )

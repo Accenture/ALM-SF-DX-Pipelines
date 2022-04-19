@@ -1,0 +1,8 @@
+steps:
+  - task: Bash@3
+    displayName: 'Install Python Requirements'
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip3 install -r requirements.txt
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SCRIPTS)

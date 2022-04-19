@@ -1,0 +1,62 @@
+steps:
+  - task: Bash@3
+    displayName: 'Handle Delta Status'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "Delta status code: $(buildDeltaStatusCode)"
+
+        buildDeltaStatusMessage=""
+        deltaBuilt=false
+
+        if [[ "$(buildDeltaStatusCode)" == 0 ]]; then
+          packageHasFiles=$( ls $(SRC_TO_DEPLOY) | wc -l | xargs )
+          echo $packageHasFiles
+          if [[ "$packageHasFiles" != '0' ]]; then
+            deltaBuilt=true
+            buildDeltaStatusMessage="+ Delta Package Built Successfully"
+          else
+            buildDeltaStatusMessage="+ **ERROR: Delta Package has no files to deploy**"
+          fi
+        elif [[ "$(buildDeltaStatusCode)" == 2 ]]; then
+          buildDeltaStatusMessage="+ **ERROR: Delta Package was not built**"
+        elif [[ "$(buildDeltaStatusCode)" == 3 ]]; then
+          buildDeltaStatusMessage="+ **ERROR: Merge Conflicts found**"
+        elif [[ "$(buildDeltaStatusCode)" == 4 ]]; then
+          buildDeltaStatusMessage="+ **ERROR: Delta Package was not built**"
+        elif [[ "$(buildDeltaStatusCode)" == 11 ]]; then
+          buildDeltaStatusMessage="+ **ERROR: Unknown metadata found**"
+        elif [[ "$(buildDeltaStatusCode)" == 113 ]]; then
+          buildDeltaStatusMessage="+ **ERROR: Duplicated tags found**"
+        elif [[ "$(buildDeltaStatusCode)" == 123 ]]; then
+          buildDeltaStatusMessage="+ **ERROR: Could not find remote/source branch**"
+        else
+          buildDeltaStatusMessage="+ **ERROR: Unhandled Error**"
+        fi
+
+        # Export variables
+        echo "##vso[task.setvariable variable=deltaBuilt]$deltaBuilt"
+        echo "##vso[task.setvariable variable=buildDeltaStatusMessage]$buildDeltaStatusMessage"
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(buildDeltaStatusMessage)'
+
+  - task: Bash@3
+    displayName: 'Cancel pipeline on delta build error'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "##vso[task.logissue type=error;]$(buildDeltaStatusMessage)"
+        echo "##vso[task.complete result=Failed;]"
+        exit 1
+      failOnStderr: true
+    condition: startsWith(variables['buildDeltaStatusMessage'], '+ **ERROR')
+
+  - template: ../utils/publishArtifact.yml@Templates_Salesforce
+    parameters:
+      artifactPath: '$(Pipeline.Workspace)/$(PATH_SALESFORCE)/$(SRC_TO_DEPLOY)'
+      artifactName: '$(SRC_TO_DEPLOY)'
+      commentMessage: 'Download Delta Package'
+      isFile: 'false'

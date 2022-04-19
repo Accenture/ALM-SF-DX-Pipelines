@@ -1,0 +1,67 @@
+steps:
+  - task: PowerShell@2
+    displayName: 'Get Pull Request Info'
+    name: GetPullRequestInfo
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Set local variables
+        $repoHost_split = ('$(System.TeamFoundationCollectionUri)' -split '/')
+        $repoHost0= $repoHost_split[0]
+        $repoHost1= $repoHost_split[1]
+        $repoHost2= $repoHost_split[2]
+        $repoHost = "$repoHost0/$repoHost1/$repoHost2"
+        $owner = $repoHost_split[3]
+        $uri = "$repoHost/$owner/$(GIT_PROJECT_NAME)/_apis/git/pullrequests/$(System.PullRequest.PullRequestId)?api-version=6.0"
+
+        # Get the pull request json data
+        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("$(REST_AZURE_USER):$(REST_AZURE_TOKEN)")))
+        $varPullRequestJson = Invoke-RestMethod -Uri $uri -Method Get -ContentType "application/json" -Headers @{Authorization=("Basic $base64AuthInfo")}
+
+        # Set global variables
+        $gitPullRequestId = $(System.PullRequest.PullRequestId)
+        $gitMergeRequestDescription = ($varPullRequestJson.description)
+        $gitSourceBranch = ('$(System.PullRequest.SourceBranch)' -split 'refs/heads/')[-1]
+        $gitTargetBranch = ('$(System.PullRequest.TargetBranch)' -split 'refs/heads/')[-1]
+
+        # Save $gitMergeRequestDescription to file
+        $file = "$(Pipeline.Workspace)/gitMergeRequestDescription.txt"
+        $gitMergeRequestDescription | Add-Content -Path $file
+
+        # Print variables
+        Write-Host "gitPullRequestId: $gitPullRequestId"
+        Write-Host "gitSourceBranch: $gitSourceBranch"
+        Write-Host "gitTargetBranch: $gitTargetBranch"
+        Write-Host "repoHost: $repoHost"
+        Write-Host "owner: $owner"
+
+        # Export global variables
+        Write-Host "##vso[task.setvariable variable=gitPullRequestId]$gitPullRequestId"
+        Write-Host "##vso[task.setvariable variable=gitSourceBranch]$gitSourceBranch"
+        Write-Host "##vso[task.setvariable variable=gitTargetBranch]$gitTargetBranch"
+        Write-Host "##vso[task.setvariable variable=repoHost]$repoHost"
+        Write-Host "##vso[task.setvariable variable=owner]$owner"
+
+  - task: PythonScript@0
+    displayName: 'Get Tests To Run'
+    name: getTests
+    inputs:
+      scriptSource: 'inline'
+      script: |
+        #!/usr/bin/python
+        import os.path
+
+        testToRun = ""
+
+        gitMergeRequestDescription = open('$(Pipeline.Workspace)/gitMergeRequestDescription.txt').read()
+
+        if( gitMergeRequestDescription and 'testsToBeRun' in gitMergeRequestDescription ):
+          testToRun = gitMergeRequestDescription.split( 'testsToBeRun' )[ 1 ].split( '```' )[ 0 ].strip()
+          testToRun = ','.join( testToRun.split( ' ' ) )
+          testToRun = ','.join( testToRun.split( '\n' ) )
+
+        # Print variables
+        print('testToRun...', testToRun)
+
+        # Export variables
+        print("##vso[task.setvariable variable=testToRun]" + testToRun)

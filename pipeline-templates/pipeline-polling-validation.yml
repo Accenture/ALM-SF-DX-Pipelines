@@ -1,0 +1,29 @@
+steps:
+  # Checkout Python Scripts
+  - template: ../code-templates/preconfig/clonePythonRepository.yml@Templates_Salesforce
+
+  # Checkout AP_Salesforce
+  - template: ../code-templates/preconfig/cloneSalesforceRepository.yml@Templates_Salesforce
+
+  # Set Python version 3.7
+  - template: ../code-templates/preconfig/setPythonVersion37.yml@Templates_Salesforce
+
+  # Install Python Requirements
+  - template: ../code-templates/preconfig/pipInstallRequirements.yml@Templates_Salesforce
+
+  # Update Thread
+  - template: ../code-templates/utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: "## Starting Build. Executing Pipeline: [$(Build.DefinitionName)]($(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)) ##"
+
+  # Install sfdx-cli
+  - template: ../code-templates/preconfig/installSfdxCli.yml@Templates_Salesforce
+
+  # Authenticate Org
+  - template: ../code-templates/config/authenticationSfdx.yml@Templates_Salesforce
+
+  # Poll Validation
+  - template: ../code-templates/validation/polling-validation.yml@Templates_Salesforce
+
+  # Post Build Steps
+  - template: ../code-templates/post-build/postBuild-polling.yml@Templates_Salesforce

@@ -1,0 +1,42 @@
+steps:
+  # Checkout Python Scripts
+  - template: ../code-templates/preconfig/clonePythonRepository.yml@Templates_Salesforce
+
+  # Checkout AP_Salesforce
+  - template: ../code-templates/preconfig/cloneSalesforceRepository.yml@Templates_Salesforce
+
+  # Config Git user
+  - template: ../code-templates/preconfig/configGlobalUser.yml@Templates_Salesforce
+
+  # Set Python version 3.7
+  - template: ../code-templates/preconfig/setPythonVersion37.yml@Templates_Salesforce
+
+  # Install Requirements
+  - template: ../code-templates/preconfig/pipInstallRequirements.yml@Templates_Salesforce
+
+  # Get Pull Request Information
+  - template: ../code-templates/preconfig/getPullRequestInfo.yml@Templates_Salesforce
+
+  # Create Pull Request Thread
+  - template: ../code-templates/preconfig/createPullRequestThread.yml@Templates_Salesforce
+
+  # Install sfdx-cli
+  - template: ../code-templates/preconfig/installSfdxCli.yml@Templates_Salesforce
+
+  # Authenticate Org
+  - template: ../code-templates/config/authenticationSfdx.yml@Templates_Salesforce
+
+  # Generate describe
+  - template: ../code-templates/config/generateDescribeSfdx.yml@Templates_Salesforce
+
+  # Generate Delta Package
+  - template: ../code-templates/build-delta/buildDelta.yml@Templates_Salesforce
+
+  # Perform PMD Analysis
+  - template: ../code-templates/reports/pmdAnalysis.yml@Templates_Salesforce
+
+  # Deploy Delta Package
+  - template: ../code-templates/deploy/queue-deploy.yml@Templates_Salesforce
+
+  # Post Build Steps
+  - template: ../code-templates/post-build/postBuild.yml@Templates_Salesforce

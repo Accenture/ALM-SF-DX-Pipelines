@@ -1,0 +1,50 @@
+steps:
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '+ Running PMD Analysis'
+      isParametrizedMsg: 'false'
+
+  - task: Bash@3
+    displayName: 'PMD Analysis'
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Install sfdx-scanner
+        sfdx plugins:install @salesforce/sfdx-scanner
+
+        reportPath="sfdxScannerReport.html"
+
+        # Run PMD scanner
+        sfdx scanner:run -f html -o $reportPath -t $(SRC_TO_DEPLOY) -v
+        statusCode=$?
+
+        pmdMsg="+ PMD Analysis finished with status **${statusCode}**"
+        reportPathGenerated=""
+
+        if [[ -f "$reportPath" ]]; then
+          reportPathGenerated="true"
+          mkdir -p artifacts_folder
+          mv $reportPath artifacts_folder/
+        else
+          reportPathGenerated="false"
+          pmdMsg="+ PMD Report not generated"
+        fi
+
+        # Export variables
+        echo "##vso[task.setvariable variable=reportPath]$reportPath"
+        echo "##vso[task.setvariable variable=pmdMsg]$pmdMsg"
+        echo "##vso[task.setvariable variable=reportPathGenerated]$reportPathGenerated"
+
+        exit $statusCode
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(pmdMsg)'
+
+  - template: ../utils/publishArtifact.yml@Templates_Salesforce
+    parameters:
+      artifactPath: '$(Pipeline.Workspace)/$(PATH_SALESFORCE)/artifacts_folder/$(reportPath)'
+      artifactName: $(reportPath)
+      commentMessage: 'Download PMD Report'

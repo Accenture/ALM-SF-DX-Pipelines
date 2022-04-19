@@ -1,0 +1,5 @@
+steps:
+  - checkout: AP_Salesforce
+    displayName: 'Checkout Salesforce Repository'
+    path: $(PATH_SALESFORCE)
+    name: CheckoutSourceRepository

@@ -1,0 +1,57 @@
+steps:
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '+ Polling Salesforce Validation'
+      isParametrizedMsg: 'false'
+
+  - task: Bash@3
+    displayName: 'Poll Validation'
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        # validate package
+        echo "$(validationId)"
+        sfdx force:source:deploy:report -w 99 -u $(SFDX_USERNAME) --apiversion ${API_VERSION} -i $(validationId) --verbose
+        sfdx force:source:deploy:report -w 1 -u $(SFDX_USERNAME) --apiversion ${API_VERSION} -i $(validationId) --json > validate.json
+
+        mkdir -p artifacts_folder
+        mv validate.json artifacts_folder/validate.json
+
+        statusCode=0
+        validationStatusMessage=""
+        if [[ $statusCode -ne 0 || "true" != $(jq -r '.result.success' artifacts_folder/validate.json) ]] ; then
+          statusCode=1
+          validationStatusMessage="+ **Validation Failed**"
+        else
+          validationStatusMessage="+ Validation Completed Successfully"
+        fi
+        echo "Status code: ${statusCode}"
+
+        # Export variables
+        echo "##vso[task.setvariable variable=validationStatusMessage]$validationStatusMessage"
+
+        exit ${statusCode}
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(validationStatusMessage)'
+
+  - template: ../utils/publishArtifact.yml@Templates_Salesforce
+    parameters:
+      artifactPath: '$(Pipeline.Workspace)/$(PATH_SALESFORCE)/artifacts_folder/validate.json'
+      artifactName: 'validate.json'
+      commentMessage: 'Download Validate JSON'
+
+  - task: Bash@3
+    displayName: 'Cancel pipeline on deployment error'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "$(validationStatusMessage)"
+        echo "##vso[task.logissue type=error;]$(validationStatusMessage)"
+        echo "##vso[task.complete result=Failed;]"
+        exit 1
+      failOnStderr: true
+    condition: eq( variables['validationStatusMessage'], '+ **Validation Failed**' )

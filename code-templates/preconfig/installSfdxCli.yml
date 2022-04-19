@@ -1,0 +1,11 @@
+steps:
+  - task: Bash@3
+    displayName: 'Install sfdx-cli'
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir $(Agent.ToolsDirectory)/sfdx
+        wget https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/stable/sfdx-linux-x64.tar.xz -nv
+        tar xJf sfdx-linux-x64.tar.xz -C $(Agent.ToolsDirectory)/sfdx --strip-components 1
+        $(Agent.ToolsDirectory)/sfdx/bin/sfdx --version
+        echo '##vso[task.prependpath]$(Agent.ToolsDirectory)/sfdx/bin'

@@ -1,0 +1,10 @@
+parameters:
+  name: errorMsg
+
+steps:
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "##vso[task.logissue type=error;]${{parameters.errorMsg}}"
+        echo "##vso[task.complete result=Failed;]"

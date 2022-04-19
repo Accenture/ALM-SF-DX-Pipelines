@@ -1,0 +1,63 @@
+parameters:
+  - name: 'artifactPath'
+    type: string
+  - name: 'artifactName'
+    type: string
+  - name: 'commentMessage'
+    type: string
+  - name: 'isFile'
+    type: string
+    default: 'true'
+
+steps:
+  - task: Bash@3
+    displayName: 'Check if Artifact Exists'
+    inputs:
+      targetType: 'inline'
+      script: |
+        pathIsValid="false"
+        if [[ "${{parameters.isFile}}" == 'true' && -f "${{parameters.artifactPath}}" ]]; then
+          pathIsValid="true"
+        elif [[ "${{parameters.isFile}}" != 'true' && -d "${{parameters.artifactPath}}" ]]; then
+          pathIsValid="true"
+        fi
+        echo "##vso[task.setvariable variable=pathIsValid]${pathIsValid}"
+
+  - publish: "${{parameters.artifactPath}}"
+    artifact: "${{parameters.artifactName}}"
+    displayName: 'Publish Artifact'
+    condition: eq( variables['pathIsValid'], 'true' )
+
+  - task: PowerShell@2
+    displayName: 'Get Artifact Url'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $commentArtifactMsg = ""
+
+        if( "$(pathIsValid)" -eq 'true' ){
+          $url = "$(repoHost)/$(owner)/$(GIT_PROJECT_NAME)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${{parameters.artifactName}}&fileName=${{parameters.artifactName}}"
+          Write-Host "url: ${url}"
+
+          $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("$(REST_AZURE_USER):$(REST_AZURE_TOKEN)")))
+          $response = Invoke-RestMethod -Uri $url -Method Get -ContentType "application/json" -Headers @{Authorization=("Basic $base64AuthInfo")}
+          Write-Host "response: ${response}"
+
+          $downloadArtifactUrl = $response.resource.downloadUrl
+          if( "${{parameters.isFile}}" -eq 'true' ){
+            $downloadArtifactUrl = $downloadArtifactUrl.Split("?")
+            $downloadArtifactUrl = $downloadArtifactUrl[0]
+            $downloadArtifactUrl = $downloadArtifactUrl + "?format=file&subPath=/${{parameters.artifactName}}"
+          }
+          $commentArtifactMsg = "+ [${{parameters.commentMessage}}]($downloadArtifactUrl)"
+        }
+
+        # Print variables
+        Write-Host "commentArtifactMsg: ${commentArtifactMsg}"
+
+        # Output variables
+        Write-Host "##vso[task.setvariable variable=commentArtifactMsg]${commentArtifactMsg}"
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(commentArtifactMsg)'

@@ -1,0 +1,33 @@
+steps:
+  - task: Bash@3
+    displayName: 'Build Delta Package'
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "Source Branch: $(gitSourceBranch)"
+        echo "Target Branch: $(gitTargetBranch)"
+
+        python3.7 $(Pipeline.Workspace)/$(PATH_SCRIPTS)/mergerDX/merger.py merge_delta -s $(gitSourceBranch) -t $(gitTargetBranch) -a $(API_VERSION)
+        buildDeltaStatusCode=$?
+
+        echo "INFO: Build Delta returned status code: ${buildDeltaStatusCode}"
+
+        # Export variables
+        echo "##vso[task.setvariable variable=buildDeltaStatusCode]$buildDeltaStatusCode"
+
+        exit $buildDeltaStatusCode
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
+
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: |
+        if [[ ! "$(ls -A srcToDeploy)" ]] ; then
+          echo "##vso[task.logissue type=error;]El delta generado no contiene cambios"
+          echo "##vso[task.complete result=Failed;]"
+          exit 1
+        fi
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
+
+  - template: handleDeltaStatus.yml@Templates_Salesforce

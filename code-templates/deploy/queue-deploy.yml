@@ -1,0 +1,36 @@
+steps:
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '+ Running Salesforce Deployment'
+      isParametrizedMsg: 'false'
+
+  - template: ../utils/checkTestToRun.yml@Templates_Salesforce
+
+  - task: Bash@3
+    displayName: 'Deploy Package'
+    name: 'deployPackage'
+    inputs:
+      targetType: 'inline'
+      script: |
+        testString=""
+        if [[ ! -z "$(testToRun)" ]]; then
+          testString="-l RunSpecifiedTests -r $(testToRun)"
+        fi
+
+        sfdx force:source:deploy -u ${SFDX_USERNAME} -p ${SRC_TO_DEPLOY} ${testString} --apiversion ${API_VERSION} --wait 0 > deploymentInfo.log
+        deploymentId=$(cat deploymentInfo.log | awk -F":" '/^Deploy\sID:\s/ { print $2 }' | xargs)
+
+        echo "${deploymentId}"
+        if [[ -z "${deploymentId}" ]]; then
+          echo "##vso[task.logissue type=error;]Error while queuing Deployment"
+          echo "##vso[task.complete result=Failed;]"
+          exit 1
+        fi
+
+        echo "##vso[task.setvariable variable=deploymentId;isOutput=true]${deploymentId}"
+        echo "##vso[task.setvariable variable=gitPullRequestId;isOutput=true]$(gitPullRequestId)"
+        echo "##vso[task.setvariable variable=owner;isOutput=true]$(owner)"
+        echo "##vso[task.setvariable variable=repoHost;isOutput=true]$(repoHost)"
+        echo "##vso[task.setvariable variable=pullRequestThreadId;isOutput=true]$(pullRequestThreadId)"
+        echo "##vso[task.setvariable variable=testToRun;isOutput=true]$(testToRun)"
+      workingDirectory: '$(Pipeline.Workspace)/$(PATH_SALESFORCE)'

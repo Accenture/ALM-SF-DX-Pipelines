@@ -1,0 +1,7 @@
+steps:
+  - task: DownloadSecureFile@1
+    name: serverKey
+    displayName: 'Download Certificate'
+    inputs:
+      secureFile: $(SFDX_CRT)
+      failOnStderr: true

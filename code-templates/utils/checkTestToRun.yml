@@ -1,0 +1,30 @@
+steps:
+  - task: Bash@3
+    displayName: 'Check Test To Run'
+    inputs:
+      targetType: 'inline'
+      script: |
+        testToRun="$(testToRun)"
+
+        infoMessage=""
+        if [[ ( -d classes || -d triggers ) && ( -z "$testToRun" ) ]]; then
+          infoMessage="+ **ERROR - Execution blocked because no test classes were added**"
+        fi
+
+        echo "##vso[task.setvariable variable=infoMessage]${infoMessage}"
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)/$(SRC_TO_DEPLOY)
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(infoMessage)'
+
+  - task: Bash@3
+    displayName: 'Cancel pipeline if no test were added'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "##vso[task.logissue type=error;]$(infoMessage)"
+        echo "##vso[task.complete result=Failed;]"
+        exit 1
+      failOnStderr: true
+    condition: startsWith( variables['infoMessage'], '+ **ERROR - ' )

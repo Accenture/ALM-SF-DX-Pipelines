@@ -1,0 +1,28 @@
+steps:
+  - task: Bash@3
+    displayName: 'Set build success message'
+    inputs:
+      targetType: 'inline'
+      script: |
+        if [[ "$(CHECK_DEPLOY)" == 'true' ]]; then
+          echo "##vso[task.setvariable variable=postBuildMessage]+ **Deployment Queued**"
+        else
+          echo "##vso[task.setvariable variable=postBuildMessage]+ **Validation Queued**"
+        fi
+    condition: succeeded()
+
+  - task: Bash@3
+    displayName: 'Set build error message'
+    inputs:
+      targetType: 'inline'
+      script: |
+        if [[ "$(CHECK_DEPLOY)" == 'true' ]]; then
+          echo "##vso[task.setvariable variable=postBuildMessage]+ **Error Queuing Deployment**"
+        else
+          echo "##vso[task.setvariable variable=postBuildMessage]+ **Error Queuing Validation**"
+        fi
+    condition: failed()
+
+  - template: ../utils/thread-updateComment.yml@Templates_Salesforce
+    parameters:
+      messageContent: '$(postBuildMessage)'

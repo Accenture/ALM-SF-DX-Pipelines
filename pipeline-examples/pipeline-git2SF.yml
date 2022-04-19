@@ -1,0 +1,93 @@
+name: $(BuildDefinitionName)_$(SourceBranchName)_$(Build.BuildId)
+
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-18.04'
+
+resources:
+  repositories:
+  - repository: Python_Scripts  
+    type: github
+    name: Accenture/ALM-SF-DX-Python-Tools
+    ref: refs/heads/$(GIT_BRANCH_REPO_SCRIPTS)
+    endpoint: ALM-SF-DX-Python-Tools
+
+  - repository: Templates_Salesforce
+    type: git
+    name: Salesforce/Templates_Salesforce
+    ref: refs/heads/main
+
+  - repository: AP_Salesforce
+    type: git
+    name: Salesforce/AP_Salesforce
+    ref: refs/heads/main
+
+variables:
+  - group: 'alm-global-vars'
+  - name: isValidSourceBranch
+    value: $[startsWith(variables['System.PullRequest.SourceBranch'], variables.SOURCE_BRANCH)]
+
+stages:
+  - stage: Valitation
+    condition: and( eq( variables.isValidSourceBranch, 'true' ), eq( lower(variables.CHECK_DEPLOY), 'false' ) )
+    displayName: 'Validation'
+    jobs:
+      - job: Validate
+        steps:
+        - template: pipeline-templates/pipeline-queue-validate.yml@Templates_Salesforce
+
+      - job: ValidationPolling
+        dependsOn: Validate
+        condition: succeeded()
+        variables:
+          - name: validationId
+            value: $[ dependencies.Validate.outputs['validatePackage.validationId'] ]
+          - name: gitPullRequestId
+            value: $[ dependencies.Validate.outputs['validatePackage.gitPullRequestId'] ]
+          - name: owner
+            value: $[ dependencies.Validate.outputs['validatePackage.owner'] ]
+          - name: repoHost
+            value: $[ dependencies.Validate.outputs['validatePackage.repoHost'] ]
+          - name: pullRequestThreadId
+            value: $[ dependencies.Validate.outputs['validatePackage.pullRequestThreadId'] ]
+          - name: testToRun
+            value: $[ dependencies.Validate.outputs['validatePackage.testToRun'] ]
+        steps:
+        - template: pipeline-templates/pipeline-polling-validation.yml@Templates_Salesforce
+
+  - stage: Deployment
+    condition: and( eq( variables.isValidSourceBranch, 'true' ), eq( lower(variables.CHECK_DEPLOY), 'true' ) )
+    displayName: 'Deployment'
+    jobs:
+      - job: Deploy
+        steps:
+        - template: pipeline-templates/pipeline-queue-deploy.yml@Templates_Salesforce
+
+      - job: DeploymentPolling
+        dependsOn: Deploy
+        condition: succeeded()
+        variables:
+          - name: deploymentId
+            value: $[ dependencies.Deploy.outputs['deployPackage.deploymentId'] ]
+          - name: gitPullRequestId
+            value: $[ dependencies.Deploy.outputs['deployPackage.gitPullRequestId'] ]
+          - name: owner
+            value: $[ dependencies.Deploy.outputs['deployPackage.owner'] ]
+          - name: repoHost
+            value: $[ dependencies.Deploy.outputs['deployPackage.repoHost'] ]
+          - name: pullRequestThreadId
+            value: $[ dependencies.Deploy.outputs['deployPackage.pullRequestThreadId'] ]
+          - name: testToRun
+            value: $[ dependencies.Deploy.outputs['deployPackage.testToRun'] ]
+        steps:
+        - template: pipeline-templates/pipeline-polling-deploy.yml@Templates_Salesforce
+
+  - stage: InvalidSourceBranch
+    condition: ne( variables.isValidSourceBranch, 'true' )
+    jobs:
+      - job: CancelBuild
+        steps:
+          - template: code-templates/utils/cancel-pipeline.yml@Templates_Salesforce
+            parameters:
+              errorMsg: 'Invalid source branch'

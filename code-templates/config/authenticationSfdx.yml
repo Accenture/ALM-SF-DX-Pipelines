@@ -1,0 +1,20 @@
+steps:
+  - template: downloadServerKey.yml@Templates_Salesforce
+
+  - task: Bash@3
+    displayName: 'Authenticate org'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "Logging as $(SFDX_USERNAME)"
+
+        authResponse=$(sfdx auth:jwt:grant --clientid "$(SFDX_CONSUMER_KEY)" --jwtkeyfile "$(serverKey.secureFilePath)" --username "$(SFDX_USERNAME)" --instanceurl "$(SFDX_INSTANCE_URL)" --json)
+        statusCode=$(jq -r '.status' <<< $authResponse)
+
+        if [[ "$statusCode" != "0" ]]; then
+          authenticationMessage=$(jq -r '.message' <<< $authResponse)
+          echo "Error found: $authenticationMessage"
+          echo "##vso[task.logissue type=error;]$authenticationMessage"
+          exit 1
+        fi
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)

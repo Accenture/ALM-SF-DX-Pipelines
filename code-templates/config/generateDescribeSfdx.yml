@@ -1,0 +1,11 @@
+steps:
+  - task: Bash@3
+    displayName: 'Generate Describe'
+    inputs:
+      targetType: 'inline'
+      script: |
+        sfdx force:mdapi:describemetadata -u $(SFDX_USERNAME) -f describe.log --apiversion $(API_VERSION)
+        statusCode=$?
+
+        echo "Status code: $statusCode"
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)

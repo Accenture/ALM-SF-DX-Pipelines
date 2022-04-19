@@ -1,0 +1,11 @@
+steps:
+  - task: Bash@3
+    displayName: 'Config Git User'
+    inputs:
+      targetType: 'inline'
+      script: |
+        git config --global user.email $(GIT_USER_NAME)
+        git config --global user.name $(GIT_USER_EMAIL)
+        echo "Queued by: $(Build.QueuedBy)"
+        echo "Queued by Id: $(Build.QueuedById)"
+      workingDirectory: $(Pipeline.Workspace)/$(PATH_SALESFORCE)
