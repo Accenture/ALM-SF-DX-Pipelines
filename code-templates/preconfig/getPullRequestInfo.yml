@@ -28,7 +28,8 @@ steps:
         if( "$gitMergeRequestDescription".contains( 'testsToBeRun' ) ){
           $testToRun = "$gitMergeRequestDescription" -Split 'testsToBeRun'
           $testToRun = $testToRun[ 1 ] -Split '```'
-          $testToRun = $testToRun[ 0 ].trim() -Split ' '
+          $testToRun = $testToRun[ 0 ].trim() -Split '\n'
+          $testToRun = $testToRun.trim() -Split ' '
           $testToRun = $testToRun.trim() -join ','
         }
 
