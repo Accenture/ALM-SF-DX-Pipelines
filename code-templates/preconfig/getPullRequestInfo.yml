@@ -37,6 +37,7 @@ steps:
         Write-Host "gitTargetBranch: $gitTargetBranch"
         Write-Host "repoHost: $repoHost"
         Write-Host "owner: $owner"
+        Write-Host "testToRun: $testToRun"
 
         # Export global variables
         Write-Host "##vso[task.setvariable variable=gitPullRequestId]$gitPullRequestId"
