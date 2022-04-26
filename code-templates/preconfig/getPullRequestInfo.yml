@@ -24,9 +24,14 @@ steps:
         $gitSourceBranch = ('$(System.PullRequest.SourceBranch)' -split 'refs/heads/')[-1]
         $gitTargetBranch = ('$(System.PullRequest.TargetBranch)' -split 'refs/heads/')[-1]
 
-        # Save $gitMergeRequestDescription to file
-        $file = "$(Pipeline.Workspace)/gitMergeRequestDescription.txt"
-        $gitMergeRequestDescription | Add-Content -Path $file
+        $testToRun = ""
+        if( "$gitMergeRequestDescription".contains( 'testsToBeRun' ) ){
+          $testToRun = "$gitMergeRequestDescription" -Split 'testsToBeRun'
+          $testToRun = $testToRun[ 1 ] -Split '```'
+          $testToRun = $testToRun[ 0 ].trim() -Split '\n'
+          $testToRun = $testToRun.trim() -Split ' '
+          $testToRun = $testToRun.trim() -join ','
+        }
 
         # Print variables
         Write-Host "gitPullRequestId: $gitPullRequestId"
@@ -34,6 +39,7 @@ steps:
         Write-Host "gitTargetBranch: $gitTargetBranch"
         Write-Host "repoHost: $repoHost"
         Write-Host "owner: $owner"
+        Write-Host "testToRun: $testToRun"
 
         # Export global variables
         Write-Host "##vso[task.setvariable variable=gitPullRequestId]$gitPullRequestId"
@@ -41,27 +47,4 @@ steps:
         Write-Host "##vso[task.setvariable variable=gitTargetBranch]$gitTargetBranch"
         Write-Host "##vso[task.setvariable variable=repoHost]$repoHost"
         Write-Host "##vso[task.setvariable variable=owner]$owner"
-
-  - task: PythonScript@0
-    displayName: 'Get Tests To Run'
-    name: getTests
-    inputs:
-      scriptSource: 'inline'
-      script: |
-        #!/usr/bin/python
-        import os.path
-
-        testToRun = ""
-
-        gitMergeRequestDescription = open('$(Pipeline.Workspace)/gitMergeRequestDescription.txt').read()
-
-        if( gitMergeRequestDescription and 'testsToBeRun' in gitMergeRequestDescription ):
-          testToRun = gitMergeRequestDescription.split( 'testsToBeRun' )[ 1 ].split( '```' )[ 0 ].strip()
-          testToRun = ','.join( testToRun.split( ' ' ) )
-          testToRun = ','.join( testToRun.split( '\n' ) )
-
-        # Print variables
-        print('testToRun...', testToRun)
-
-        # Export variables
-        print("##vso[task.setvariable variable=testToRun]" + testToRun)
+        Write-Host "##vso[task.setvariable variable=testToRun]$testToRun"
