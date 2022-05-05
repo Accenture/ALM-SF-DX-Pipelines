@@ -11,8 +11,8 @@ steps:
       targetType: 'inline'
       script: |
         echo "$(deploymentId)"
-        sfdx force:source:deploy:report -w 99 -u $(SFDX_USERNAME) --apiversion ${API_VERSION} -i $(deploymentId) --verbose
-        sfdx force:source:deploy:report -w 1 -u $(SFDX_USERNAME) --apiversion ${API_VERSION} -i $(deploymentId) --json > deploy.json
+        sfdx force:source:deploy:report -w 99 -u $(sfdxUsername) --apiversion ${API_VERSION} -i $(deploymentId) --verbose
+        sfdx force:source:deploy:report -w 1 -u $(sfdxUsername) --apiversion ${API_VERSION} -i $(deploymentId) --json > deploy.json
 
         mkdir -p artifacts_folder
         mv deploy.json artifacts_folder/deploy.json

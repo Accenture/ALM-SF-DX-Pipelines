@@ -6,9 +6,9 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo "Logging as $(SFDX_USERNAME)"
+        echo "Logging as $(sfdxUsername)"
 
-        authResponse=$(sfdx auth:jwt:grant --clientid "$(SFDX_CONSUMER_KEY)" --jwtkeyfile "$(serverKey.secureFilePath)" --username "$(SFDX_USERNAME)" --instanceurl "$(SFDX_INSTANCE_URL)" --json)
+        authResponse=$(sfdx auth:jwt:grant --clientid "$(sfdxConsumerKey)" --jwtkeyfile "$(serverKey.secureFilePath)" --username "$(sfdxUsername)" --instanceurl "$(SFDX_INSTANCE_URL)" --json)
         statusCode=$(jq -r '.status' <<< $authResponse)
 
         if [[ "$statusCode" != "0" ]]; then
