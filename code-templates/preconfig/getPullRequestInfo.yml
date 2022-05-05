@@ -12,19 +12,19 @@ steps:
         $repoHost2= $repoHost_split[2]
         $repoHost = "$repoHost0/$repoHost1/$repoHost2"
         $owner = $repoHost_split[3]
-        $uri = "$repoHost/$owner/$(GIT_PROJECT_NAME)/_apis/git/pullrequests/$(System.PullRequest.PullRequestId)?api-version=6.0"
+        $uri = "$repoHost/$owner/$(GIT_PROJECT_NAME)/_apis/git/pullrequests/$(pullRequestId)?api-version=6.0"
+        Write-Host "uri: $uri"
 
         # Get the pull request json data
         $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("$(REST_AZURE_USER):$(REST_AZURE_TOKEN)")))
         $varPullRequestJson = Invoke-RestMethod -Uri $uri -Method Get -ContentType "application/json" -Headers @{Authorization=("Basic $base64AuthInfo")}
 
         # Set global variables
-        $gitPullRequestId = $(System.PullRequest.PullRequestId)
-        $gitMergeRequestDescription = ($varPullRequestJson.description)
-        $gitSourceBranch = ('$(System.PullRequest.SourceBranch)' -split 'refs/heads/')[-1]
-        $gitTargetBranch = ('$(System.PullRequest.TargetBranch)' -split 'refs/heads/')[-1]
+        $gitSourceBranch = ( $varPullRequestJson.sourceRefName -split 'refs/heads/' )[ 1 ]
+        $gitTargetBranch = ( $varPullRequestJson.targetRefName -split 'refs/heads/' )[ 1 ]
 
         $testToRun = ""
+        $gitMergeRequestDescription = ($varPullRequestJson.description)
         if( "$gitMergeRequestDescription".contains( 'testsToBeRun' ) ){
           $testToRun = "$gitMergeRequestDescription" -Split 'testsToBeRun'
           $testToRun = $testToRun[ 1 ] -Split '```'
@@ -34,7 +34,6 @@ steps:
         }
 
         # Print variables
-        Write-Host "gitPullRequestId: $gitPullRequestId"
         Write-Host "gitSourceBranch: $gitSourceBranch"
         Write-Host "gitTargetBranch: $gitTargetBranch"
         Write-Host "repoHost: $repoHost"
@@ -42,7 +41,6 @@ steps:
         Write-Host "testToRun: $testToRun"
 
         # Export global variables
-        Write-Host "##vso[task.setvariable variable=gitPullRequestId]$gitPullRequestId"
         Write-Host "##vso[task.setvariable variable=gitSourceBranch]$gitSourceBranch"
         Write-Host "##vso[task.setvariable variable=gitTargetBranch]$gitTargetBranch"
         Write-Host "##vso[task.setvariable variable=repoHost]$repoHost"

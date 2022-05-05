@@ -17,7 +17,9 @@ steps:
           testString="-l RunSpecifiedTests -r $(testToRun)"
         fi
 
-        sfdx force:source:deploy -u ${SFDX_USERNAME} -p ${SRC_TO_DEPLOY} ${testString} --apiversion ${API_VERSION} --wait 0 > deploymentInfo.log
+        echo "Deploying with user $(sfdxUsername)"
+
+        sfdx force:source:deploy -u $(sfdxUsername) -p ${SRC_TO_DEPLOY} ${testString} --apiversion ${API_VERSION} --wait 0 > deploymentInfo.log
         deploymentId=$(cat deploymentInfo.log | awk -F":" '/^Deploy\sID:\s/ { print $2 }' | xargs)
 
         echo "${deploymentId}"
@@ -28,7 +30,6 @@ steps:
         fi
 
         echo "##vso[task.setvariable variable=deploymentId;isOutput=true]${deploymentId}"
-        echo "##vso[task.setvariable variable=gitPullRequestId;isOutput=true]$(gitPullRequestId)"
         echo "##vso[task.setvariable variable=owner;isOutput=true]$(owner)"
         echo "##vso[task.setvariable variable=repoHost;isOutput=true]$(repoHost)"
         echo "##vso[task.setvariable variable=pullRequestThreadId;isOutput=true]$(pullRequestThreadId)"

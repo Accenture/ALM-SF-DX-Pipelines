@@ -15,6 +15,6 @@ steps:
       targetType: 'inline'
       script: |
         if [[ ! -z '${{ parameters.messageContent }}' && '${{ parameters.messageContent }}' != '$('* ]]; then
-          python3.7 $(Pipeline.Workspace)/$(PATH_SCRIPTS)/callGitServer/call_git_server.py comment --no-ssl --force-https -m "${{ parameters.messageContent }}"  -mr $(gitPullRequestId) -t $(REST_AZURE_TOKEN) -o $(owner) -p $(GIT_PROJECT_NAME) -ri $(GIT_REPOSITORY_NAME) -e -r $(repoHost) -b ''1'' -w ''1'' -e -ti $(pullRequestThreadId) -ts ${{ parameters.ts }}
+          python3.7 $(Pipeline.Workspace)/$(PATH_SCRIPTS)/callGitServer/call_git_server.py comment --no-ssl --force-https -m "${{ parameters.messageContent }}"  -mr $(pullRequestId) -t $(REST_AZURE_TOKEN) -o $(owner) -p $(GIT_PROJECT_NAME) -ri $(GIT_REPOSITORY_NAME) -e -r $(repoHost) -b ''1'' -w ''1'' -e -ti $(pullRequestThreadId) -ts ${{ parameters.ts }}
         fi
       failOnStderr: true
