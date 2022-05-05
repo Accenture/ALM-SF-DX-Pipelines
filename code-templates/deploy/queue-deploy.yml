@@ -19,7 +19,7 @@ steps:
 
         echo "Deploying with user $(sfdxUsername)"
 
-        sfdx force:source:deploy -u $(sfdxUsername) -p ${SRC_TO_DEPLOY} ${testString} --apiversion ${API_VERSION} --wait 0 > deploymentInfo.log
+        sfdx force:source:deploy -u "$(sfdxUsername)" -p "${SRC_TO_DEPLOY}" ${testString} --apiversion ${API_VERSION} --wait 0 > deploymentInfo.log
         deploymentId=$(cat deploymentInfo.log | awk -F":" '/^Deploy\sID:\s/ { print $2 }' | xargs)
 
         echo "${deploymentId}"
